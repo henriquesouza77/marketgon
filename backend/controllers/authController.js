@@ -2,6 +2,21 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../database/db');
 
+// Função auxiliar para converter DD/MM/YYYY -> YYYY-MM-DD
+function formatarDataParaMySQL(dataStr) {
+  if (!dataStr || typeof dataStr !== 'string' || dataStr.trim() === '') return null;
+  
+  // Se estiver no formato BR com barras (05/03/2010)
+  if (dataStr.includes('/')) {
+    const partes = dataStr.split('/');
+    if (partes.length === 3) {
+      const [dia, mes, ano] = partes;
+      return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+    }
+  }
+  return dataStr; // Retorna normal caso já venha YYYY-MM-DD
+}
+
 // POST /api/auth/login
 async function login(req, res) {
   try {
@@ -58,9 +73,8 @@ async function cadastro(req, res) {
 
     const senhaHash = await bcrypt.hash(senha, 10);
 
-    // Trata valores vazios para evitar erro no MySQL
     const cpfValor = cpf && cpf.trim() !== '' ? cpf : null;
-    const dataNascValor = data_nascimento && data_nascimento.trim() !== '' ? data_nascimento : null;
+    const dataNascValor = formatarDataParaMySQL(data_nascimento);
 
     const [resultado] = await pool.query(
       'INSERT INTO usuarios (nome, email, senha_hash, tipo, cpf, data_nascimento) VALUES (?, ?, ?, "cliente", ?, ?)',
@@ -69,7 +83,7 @@ async function cadastro(req, res) {
 
     return res.status(201).json({ id: resultado.insertId, nome, email });
   } catch (erro) {
-    console.error('Erro no cadastro:', erro);
+    console.error('Erro detalhado no cadastro:', erro);
     return res.status(500).json({ erro: 'Erro ao cadastrar usuário.' });
   }
 }
