@@ -1,6 +1,3 @@
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
-
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../database/db');
@@ -27,8 +24,7 @@ async function login(req, res) {
       return res.status(401).json({ erro: 'Credenciais inválidas.' });
     }
 
-    // Chave com valor de fallback de segurança
-    const secretKey = process.env.JWT_SECRET || 'troque_esta_chave_por_uma_bem_grande_e_aleatoria';
+    const secretKey = process.env.JWT_SECRET || 'chave_secretamarketgon_2026';
 
     const token = jwt.sign(
       { id: usuario.id, nome: usuario.nome, email: usuario.email, tipo: usuario.tipo },
@@ -41,7 +37,7 @@ async function login(req, res) {
       usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email, tipo: usuario.tipo }
     });
   } catch (erro) {
-    console.error(erro);
+    console.error('Erro no login:', erro);
     return res.status(500).json({ erro: 'Erro ao efetuar login.' });
   }
 }
@@ -62,14 +58,18 @@ async function cadastro(req, res) {
 
     const senhaHash = await bcrypt.hash(senha, 10);
 
+    // Trata valores vazios para evitar erro no MySQL
+    const cpfValor = cpf && cpf.trim() !== '' ? cpf : null;
+    const dataNascValor = data_nascimento && data_nascimento.trim() !== '' ? data_nascimento : null;
+
     const [resultado] = await pool.query(
       'INSERT INTO usuarios (nome, email, senha_hash, tipo, cpf, data_nascimento) VALUES (?, ?, ?, "cliente", ?, ?)',
-      [nome, email, senhaHash, cpf || null, data_nascimento || null]
+      [nome, email, senhaHash, cpfValor, dataNascValor]
     );
 
     return res.status(201).json({ id: resultado.insertId, nome, email });
   } catch (erro) {
-    console.error(erro);
+    console.error('Erro no cadastro:', erro);
     return res.status(500).json({ erro: 'Erro ao cadastrar usuário.' });
   }
 }
