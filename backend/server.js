@@ -21,7 +21,7 @@ async function executarArquivoSQL() {
     const [tabelas] = await pool.query("SHOW TABLES LIKE 'produtos'");
     
     if (tabelas.length > 0) {
-      console.log('⚡ As tabelas já existem no banco da Aiven. Ppulando importação.');
+      console.log('⚡ As tabelas já existem no banco da Aiven. Pulando importação.');
       return;
     }
 
@@ -29,6 +29,9 @@ async function executarArquivoSQL() {
     const caminhoSql = path.join(__dirname, 'mercearia_gon.sql'); 
     
     if (fs.existsSync(caminhoSql)) {
+      // Desativa a exigência de Chave Primária para esta sessão de importação
+      await pool.query('SET SESSION sql_require_primary_key = 0');
+
       const sql = fs.readFileSync(caminhoSql, 'utf8');
       await pool.query(sql);
       console.log('✅ Banco de dados Aiven populado com sucesso a partir do mercearia_gon.sql!');
