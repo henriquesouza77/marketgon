@@ -29,10 +29,11 @@ async function executarArquivoSQL() {
     const caminhoSql = path.join(__dirname, 'mercearia_gon.sql'); 
     
     if (fs.existsSync(caminhoSql)) {
-      // Desativa a exigência de Chave Primária para esta sessão de importação
-      await pool.query('SET SESSION sql_require_primary_key = 0');
+      let sql = fs.readFileSync(caminhoSql, 'utf8');
 
-      const sql = fs.readFileSync(caminhoSql, 'utf8');
+      // Prepende o comando para desativar a trava na MESMA execução do SQL
+      sql = 'SET SESSION sql_require_primary_key = 0;\n' + sql;
+
       await pool.query(sql);
       console.log('✅ Banco de dados Aiven populado com sucesso a partir do mercearia_gon.sql!');
     } else {
