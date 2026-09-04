@@ -80,7 +80,7 @@ CREATE TABLE `pedidos` (
   `desconto` decimal(10,2) NOT NULL DEFAULT 0.00,
   `valor_total` decimal(10,2) NOT NULL,
   `status` enum('Pendente','Pago','Finalizado','Cancelado') NOT NULL DEFAULT 'Pendente',
-  `data` date NOT NULL DEFAULT curdate(),
+  `data` date NOT NULL DEFAULT (curdate()),
   `criado_em` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
