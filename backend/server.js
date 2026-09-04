@@ -25,14 +25,19 @@ async function executarArquivoSQL() {
       return;
     }
 
-    // 2. Se a tabela não existir, lê e executa o mercearia_gon.sql
+    // 2. Se a tabela produtos não existir, lê e executa o mercearia_gon.sql
     const caminhoSql = path.join(__dirname, 'mercearia_gon.sql'); 
     
     if (fs.existsSync(caminhoSql)) {
       let sql = fs.readFileSync(caminhoSql, 'utf8');
 
-      // Prepende o comando para desativar a trava na MESMA execução do SQL
-      sql = 'SET SESSION sql_require_primary_key = 0;\n' + sql;
+      // Desativa a regra de chave primária e remove tabelas residuais de tentativas anteriores
+      const comandosIniciais = `
+        SET SESSION sql_require_primary_key = 0;
+        DROP TABLE IF EXISTS pedido_itens, pedidos, enderecos, produtos, categorias, usuarios;
+      `;
+
+      sql = comandosIniciais + '\n' + sql;
 
       await pool.query(sql);
       console.log('✅ Banco de dados Aiven populado com sucesso a partir do mercearia_gon.sql!');
